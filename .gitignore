@@ -25,7 +25,3 @@ Thumbs.db
 # Database
 *.db
 *.sqlite
-
-# Local config
-appsettings.json
-!appsettings.json.example
