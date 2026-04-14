@@ -1,4 +1,4 @@
-# Rally Indotel
+# Rally
 
 Juego de rally interactivo con preguntas, códigos QR y panel de administración.
 
