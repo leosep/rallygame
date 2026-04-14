@@ -1,0 +1,398 @@
+@page "/"
+@model rallygame.Web.Pages.Game.IndexModel
+@{
+    Layout = "_GameLayout";
+}
+
+<div id="app">
+    <!-- Loading State -->
+    <div v-if="verificando" class="flex items-center justify-center min-h-[400px]">
+        <div class="text-center">
+            <i class="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
+            <p class="text-gray-500">Verificando sesión...</p>
+        </div>
+    </div>
+
+    <!-- Registration Panel -->
+    <div v-if="currentStep === 'register' && !verificando" class="max-w-md mx-auto">
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-play text-white text-3xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800">Rally Fun</h1>
+                <p class="text-gray-500 mt-2">¡Participa ya!</p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tu Nombre</label>
+                    <input v-model="nombre" type="text" placeholder="Ingresa tu nombre" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Identificación (opcional)</label>
+                    <input v-model="identificacion" type="text" placeholder="Cédula o ID" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+                </div>
+
+                <button v-on:click="registrar" :disabled="!nombre.trim() || loading"
+                        class="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span v-if="loading"><i class="fas fa-spinner fa-spin mr-2"></i> Procesando...</span>
+                    <span v-else>¡Participar!</span>
+                </button>
+            </div>
+
+            <div class="mt-6 text-center">
+                <p class="text-xs text-gray-500">
+                    Al participar aceptas las <a href="/Game/Reglas" class="text-blue-600 hover:underline">reglas del rally</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scanner Panel -->
+    <div v-if="currentStep === 'scanner'" class="max-w-lg mx-auto">
+        <div class="bg-white rounded-2xl shadow-xl p-6">
+            <div class="text-center mb-6">
+                <h2 class="text-xl font-bold text-gray-800">Escanea el Código QR</h2>
+                <p class="text-gray-500">Apunta la cámara al código QR de la estación</p>
+            </div>
+
+            <div id="reader" class="w-full h-64 bg-gray-800 rounded-lg overflow-hidden mb-4"></div>
+            <div class="text-center mb-4">
+                <button v-on:click="startScanner" v-if="!scannerActive" class="text-blue-600 hover:text-blue-700 text-sm">
+                    <i class="fas fa-camera mr-1"></i> Abrir cámara
+                </button>
+                <button v-on:click="stopScanner" v-if="scannerActive" class="text-red-600 hover:text-red-700 text-sm">
+                    <i class="fas fa-stop mr-1"></i> Cerrar cámara
+                </button>
+            </div>
+
+            <div class="text-center border-t border-gray-200 pt-4 mt-4">
+                <p class="text-sm text-gray-500 mb-2">¿No puedes escanear?</p>
+                <input v-model="codigoManual" type="text" placeholder="Código alternativo" 
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-center text-lg uppercase tracking-widest"
+                       v-on:keyup.enter="buscarPreguntaManual">
+                <button v-on:click="buscarPreguntaManual" :disabled="!codigoManual.trim()"
+                        class="mt-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors w-full">
+                    Buscar
+                </button>
+            </div>
+        </div>
+
+        <!-- User Info Card -->
+        <div class="bg-white/80 backdrop-blur rounded-xl p-4 mt-4 flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500">Participante</p>
+                <p class="font-semibold">{{ nombre }}</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm text-gray-500">Token</p>
+                <code class="bg-gray-100 px-2 py-1 rounded text-sm">{{ token }}</code>
+            </div>
+            <button v-on:click="logout" class="text-red-500 hover:text-red-600 p-2">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Question Panel -->
+    <div v-if="currentStep === 'question'" class="max-w-lg mx-auto">
+        <div class="bg-white rounded-2xl shadow-xl p-6">
+            <div class="flex items-center justify-between mb-4">
+                <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">Pregunta</span>
+                <button v-on:click="volver" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <h2 class="text-xl font-bold text-gray-800 mb-6">{{ pregunta?.pregunta1 }}</h2>
+
+            <div class="space-y-3">
+                <label v-for="opcion in pregunta?.opcions" :key="opcion.id" 
+                       class="flex items-center gap-4 p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors"
+                       :class="{'border-blue-500 bg-blue-50': selectedOpcion === opcion.id}">
+                    <input type="radio" :value="opcion.id" v-model="selectedOpcion" class="w-5 h-5 text-blue-600">
+                    <span class="flex-1">{{ opcion.respuesta }}</span>
+                </label>
+            </div>
+
+            <button v-on:click="enviarRespuesta" :disabled="!selectedOpcion || sending"
+                    class="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all disabled:opacity-50">
+                <span v-if="sending"><i class="fas fa-spinner fa-spin mr-2"></i> Enviando...</span>
+                <span v-else>Enviar Respuesta</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Success Panel -->
+    <div v-if="currentStep === 'correcto'" class="max-w-lg mx-auto text-center">
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <div class="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-check text-green-500 text-5xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-green-600 mb-2">¡Correcto!</h2>
+            <p class="text-gray-500 mb-6">Puedes continuar escaneando el siguiente código</p>
+            <button v-on:click="volver" class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 px-8 rounded-lg transition-all">
+                Continuar
+            </button>
+        </div>
+    </div>
+
+    <!-- Error Panel -->
+    <div v-if="currentStep === 'incorrecto'" class="max-w-lg mx-auto text-center">
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <div class="w-32 h-32 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-times text-red-500 text-5xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-red-600 mb-2">Incorrecto</h2>
+            <p class="text-gray-500 mb-6">La respuesta correcta era: <strong>{{ respuestaCorrecta }}</strong></p>
+            <button v-on:click="volver" class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 px-8 rounded-lg transition-all">
+                Continuar
+            </button>
+        </div>
+    </div>
+
+    <!-- Already Answered Panel -->
+    <div v-if="currentStep === 'existe'" class="max-w-lg mx-auto text-center">
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <div class="w-32 h-32 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-exclamation-triangle text-orange-500 text-5xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-orange-600 mb-2">Ya participaste</h2>
+            <p class="text-gray-500 mb-6">Ya respondiste esta pregunta anteriormente</p>
+            <button v-on:click="volver" class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 px-8 rounded-lg transition-all">
+                Buscar otra pregunta
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script>
+    const { createApp, ref, onMounted } = Vue;
+    
+    createApp({
+        setup() {
+            const storedToken = localStorage.getItem('indoToken');
+            const storedNombre = localStorage.getItem('indoNombres');
+            const currentStep = ref(storedToken ? 'scanner' : 'register');
+            console.log('Stored token:', storedToken);
+            const nombre = ref(storedNombre || '');
+            const token = ref(storedToken || '');
+            const identificacion = ref('');
+            const codigoManual = ref('');
+            const pregunta = ref(null);
+            const selectedOpcion = ref(null);
+            const loading = ref(false);
+            const sending = ref(false);
+            const verificando = ref(false);
+            const respuestaCorrecta = ref('');
+            const scannerActive = ref(false);
+            let html5QrCode = null;
+
+            const logout = () => {
+                localStorage.removeItem('indoToken');
+                localStorage.removeItem('indoNombres');
+                token.value = '';
+                nombre.value = '';
+                currentStep.value = 'register';
+                stopScanner();
+            };
+
+            const startScanner = async () => {
+                if (scannerActive.value) return;
+                try {
+                    html5QrCode = new Html5Qrcode("reader");
+                    await html5QrCode.start(
+                        { facingMode: "environment" },
+                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                        (decodedText) => {
+                            buscarPregunta(decodedText);
+                            stopScanner();
+                        },
+                        (errorMessage) => {}
+                    );
+                    scannerActive.value = true;
+                } catch (e) {
+                    alert('Error al iniciar cámara: ' + e.message);
+                }
+            };
+
+            const stopScanner = () => {
+                if (html5QrCode && scannerActive.value) {
+                    html5QrCode.stop().then(() => {
+                        html5QrCode = null;
+                        scannerActive.value = false;
+                    }).catch(e => {});
+                }
+                scannerActive.value = false;
+            };
+
+            const registrar = async () => {
+                if (!nombre.value.trim()) return;
+                loading.value = true;
+                
+                try {
+                    const response = await fetch('/api/usuario/token', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            nombres: nombre.value,
+                            identificacion: identificacion.value || null
+                        })
+                    });
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        alert(data.error || 'Error al registrar');
+                        return;
+                    }
+                    
+                    token.value = data.token;
+                    localStorage.setItem('indoToken', data.token);
+                    localStorage.setItem('indoNombres', nombre.value);
+                    
+                    currentStep.value = 'scanner';
+                    setTimeout(() => startScanner(), 500);
+                } catch (e) {
+                    alert('Error al registrar. Intenta de nuevo.');
+                } finally {
+                    loading.value = false;
+                }
+            };
+
+            const buscarPreguntaManual = async () => {
+                if (!codigoManual.value.trim()) return;
+                await buscarPregunta(codigoManual.value);
+            };
+
+            const buscarPregunta = async (codigo) => {
+                if (!token.value) {
+                    alert('Sesión no válida');
+                    logout();
+                    return;
+                }
+                
+                const codigoLimpio = codigo.trim().toUpperCase();
+                if (!codigoLimpio) {
+                    alert('Ingresa un código');
+                    return;
+                }
+                
+                try {
+                    const encodedCodigo = encodeURIComponent(codigoLimpio);
+                    const encodedToken = encodeURIComponent(token.value);
+                    const response = await fetch(`/api/pregunta?codigoAlt=${encodedCodigo}&token=${encodedToken}`);
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            alert('Sesión expirada. Por favor regístrate de nuevo.');
+                            logout();
+                            return;
+                        }
+                        alert(data.error || 'Error al buscar pregunta');
+                        return;
+                    }
+                    
+                    if (data.existe) {
+                        currentStep.value = 'existe';
+                    } else if (data.pregunta1) {
+                        pregunta.value = data;
+                        currentStep.value = 'question';
+                        selectedOpcion.value = null;
+                    } else {
+                        alert('Código no válido');
+                    }
+                } catch (e) {
+                    alert('Error al buscar pregunta');
+                }
+            };
+
+            const enviarRespuesta = async () => {
+                if (!selectedOpcion.value || !pregunta.value?.opcions) return;
+                sending.value = true;
+                
+                try {
+                    const response = await fetch('/api/pregunta/respuesta', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            pregunta: pregunta.value.id,
+                            opcion: selectedOpcion.value,
+                            token: token.value
+                        })
+                    });
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        alert(data.error || 'Error al enviar respuesta');
+                        return;
+                    }
+                    
+                    if (data.correcto) {
+                        currentStep.value = 'correcto';
+                    } else {
+                        const opciones = pregunta.value.opcions;
+                        const correcta = opciones.find(o => o.correcto);
+                        respuestaCorrecta.value = correcta?.respuesta || '';
+                        currentStep.value = 'incorrecto';
+                    }
+                } catch (e) {
+                    alert('Error al enviar respuesta');
+                } finally {
+                    sending.value = false;
+                }
+            };
+
+            const volver = () => {
+                currentStep.value = 'scanner';
+                codigoManual.value = '';
+                pregunta.value = null;
+                selectedOpcion.value = null;
+            };
+
+            onMounted(async () => {
+                if (token.value) {
+                    verificando.value = true;
+                    const url = location.origin + '/api/usuario/verify?token=' + encodeURIComponent(token.value);
+                    console.log('Fetching:', url);
+                    try {
+                        const response = await fetch(url, {
+                            method: 'GET'
+                        });
+                        console.log('Response:', response.status, response.statusText);
+if (response.ok) {
+                             const data = await response.json();
+                             nombre.value = data.nombres || localStorage.getItem('indoNombres') || '';
+                             currentStep.value = 'scanner';
+                         } else {
+                            localStorage.removeItem('indoToken');
+                            localStorage.removeItem('indoNombres');
+                            token.value = '';
+                            currentStep.value = 'register';
+                        }
+                    } catch (e) {
+                        console.error('Fetch error:', e);
+                        localStorage.removeItem('indoToken');
+                        localStorage.removeItem('indoNombres');
+                        token.value = '';
+                        currentStep.value = 'register';
+                    } finally {
+                        verificando.value = false;
+                    }
+                }
+            });
+
+return {
+                currentStep, nombre, token, identificacion, codigoManual, pregunta, selectedOpcion,
+                loading, sending, verificando, logout, registrar, buscarPreguntaManual, enviarRespuesta, volver,
+                scannerActive, startScanner, stopScanner
+            };
+        }
+    }).mount('#app');
+</script>

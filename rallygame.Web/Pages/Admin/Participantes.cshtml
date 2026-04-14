@@ -1,0 +1,86 @@
+﻿@page
+@model rallygame.Web.Pages.Admin.ParticipantesModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Participantes";
+}
+
+<div class="mb-8 flex items-center justify-between">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-800">Participantes</h1>
+        <p class="text-gray-500">Lista de usuarios registrados</p>
+    </div>
+    <div class="text-sm text-gray-500">
+        Total: @Model.Usuarios.Count
+    </div>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="text-left py-3 px-6 text-sm font-medium text-gray-500">#</th>
+                    <th class="text-left py-3 px-6 text-sm font-medium text-gray-500">Nombre</th>
+                    <th class="text-left py-3 px-6 text-sm font-medium text-gray-500">Token</th>
+                    <th class="text-left py-3 px-6 text-sm font-medium text-gray-500">Identificación</th>
+                    <th class="text-left py-3 px-6 text-sm font-medium text-gray-500">Fecha Registro</th>
+                    <th class="text-left py-3 px-6 text-sm font-medium text-gray-500">Respuestas</th>
+                    <th class="text-left py-3 px-6 text-sm font-medium text-gray-500">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                @for (int i = 0; i < Model.Usuarios.Count; i++)
+                {
+                    var u = Model.Usuarios[i];
+                    <tr class="hover:bg-gray-50">
+                        <td class="py-3 px-6 text-gray-500">@(i + 1)</td>
+                        <td class="py-3 px-6 font-medium">@u.Nombres</td>
+                        <td class="py-3 px-6"><code class="bg-gray-100 px-2 py-1 rounded text-sm">@u.Token</code></td>
+                        <td class="py-3 px-6 text-gray-500">@(string.IsNullOrEmpty(u.Identificacion) ? "-" : u.Identificacion)</td>
+                        <td class="py-3 px-6 text-gray-500">@u.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td class="py-3 px-6">
+                            <a href="/Admin/Respuestas?token=@u.Token" class="text-blue-600 hover:text-blue-700">ver respuestas</a>
+                        </td>
+                        <td class="py-3 px-6">
+                            <button onclick="eliminarUsuario(@u.Id, '@Html.Raw(System.Web.HttpUtility.HtmlEncode(u.Nombres))')" class="text-red-500 hover:text-red-600">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    @if (!Model.Usuarios.Any())
+    {
+        <div class="p-8 text-center text-gray-500">
+            <i class="fas fa-users text-4xl mb-4 text-gray-300"></i>
+            <p>No hay participantes registrados aún</p>
+        </div>
+    }
+</div>
+
+<script>
+    async function eliminarUsuario(id, nombre) {
+        if (!confirm('¿Eliminar el participante "' + nombre + '"? Esto también eliminará todas sus respuestas.')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/admin/usuario/' + id, { 
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert(data.error || 'Error al eliminar el participante');
+            }
+        } catch (e) {
+            alert('Error al eliminar el participante');
+        }
+    }
+</script>

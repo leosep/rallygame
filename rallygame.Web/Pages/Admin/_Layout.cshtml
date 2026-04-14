@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Rally Fun Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-slate-900 text-white hidden md:flex flex-col">
+            <div class="p-6">
+                <h1 class="text-xl font-bold">Rally Fun</h1>
+                <p class="text-xs text-slate-400">Panel Admin</p>
+            </div>
+            
+            <nav class="flex-1 px-4 space-y-2">
+                <a href="/Admin/Dashboard" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors @(Context.Request.Path.Value == "/Admin/Dashboard" ? "bg-slate-800" : "")">
+                    <i class="fas fa-chart-line w-5"></i>
+                    Dashboard
+                </a>
+                <a href="/Admin/Participantes" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors @(Context.Request.Path.Value == "/Admin/Participantes" ? "bg-slate-800" : "")">
+                    <i class="fas fa-users w-5"></i>
+                    Participantes
+                </a>
+                <a href="/Admin/Preguntas" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors @(Context.Request.Path.Value == "/Admin/Preguntas" ? "bg-slate-800" : "")">
+                    <i class="fas fa-question-circle w-5"></i>
+                    Preguntas
+                </a>
+                <a href="/Admin/Respuestas" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors @(Context.Request.Path.Value == "/Admin/Respuestas" ? "bg-slate-800" : "")">
+                    <i class="fas fa-check-circle w-5"></i>
+                    Respuestas
+                </a>
+                <a href="/Admin/Codigos" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors @(Context.Request.Path.Value == "/Admin/Codigos" ? "bg-slate-800" : "")">
+                    <i class="fas fa-qrcode w-5"></i>
+                    Códigos QR
+                </a>
+            </nav>
+
+            <div class="p-4 border-t border-slate-800">
+                <a href="/Admin/Logout" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-red-400">
+                    <i class="fas fa-sign-out-alt w-5"></i>
+                    Cerrar Sesión
+                </a>
+            </div>
+        </aside>
+
+        <!-- Mobile header -->
+        <div class="md:hidden fixed top-0 left-0 right-0 bg-slate-900 text-white z-50">
+            <div class="flex items-center justify-between p-4">
+                <h1 class="font-bold">Rally Fun</h1>
+                <button id="mobileMenuBtn" class="p-2">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <main class="flex-1 p-4 md:p-8 mt-16 md:mt-0">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script>
+        document.getElementById('mobileMenuBtn')?.addEventListener('click', function() {
+            document.querySelector('aside').classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>

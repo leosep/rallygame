@@ -1,0 +1,108 @@
+﻿@page
+@model rallygame.Web.Pages.Admin.DashboardModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="mb-8">
+    <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+    <p class="text-gray-500">Estadísticas del Rally</p>
+</div>
+
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500">Participantes</p>
+                <p class="text-3xl font-bold text-gray-800">@Model.Stats.TotalParticipantes</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-users text-blue-600 text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500">Preguntas</p>
+                <p class="text-3xl font-bold text-gray-800">@Model.Stats.TotalPreguntas</p>
+            </div>
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-question-circle text-green-600 text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500">Respuestas</p>
+                <p class="text-3xl font-bold text-gray-800">@Model.Stats.TotalRespuestas</p>
+            </div>
+            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-check-circle text-purple-600 text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500">Aciertos</p>
+                <p class="text-3xl font-bold text-gray-800">@Model.Stats.PorcentajeAciertos%</p>
+            </div>
+            <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-bullseye text-orange-600 text-xl"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">Últimas Respuestas</h2>
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr class="border-b border-gray-100">
+                    <th class="text-left py-3 px-4 text-sm font-medium text-gray-500">Usuario</th>
+                    <th class="text-left py-3 px-4 text-sm font-medium text-gray-500">Pregunta</th>
+                    <th class="text-left py-3 px-4 text-sm font-medium text-gray-500">Estado</th>
+                    <th class="text-left py-3 px-4 text-sm font-medium text-gray-500">Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in @Model.RecentRespuestas)
+                {
+                    <tr class="border-b border-gray-50 hover:bg-gray-50">
+                        <td class="py-3 px-4">@r.Usuario?.Nombres</td>
+                        <td class="py-3 px-4 text-gray-600">@(r.Pregunta?.Pregunta1?.Length > 50 ? r.Pregunta.Pregunta1.Substring(0, 50) + "..." : r.Pregunta?.Pregunta1)</td>
+                        <td class="py-3 px-4">
+                            @if (r.Correcto)
+                            {
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                    <i class="fas fa-check mr-1"></i> Correcto
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                                    <i class="fas fa-times mr-1"></i> Incorrecto
+                                </span>
+                            }
+                        </td>
+                        <td class="py-3 px-4 text-gray-500 text-sm">@r.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    @if (!Model.RecentRespuestas.Any())
+    {
+        <p class="text-center text-gray-500 py-8">No hay respuestas registradas aún</p>
+    }
+</div>

@@ -1,0 +1,75 @@
+﻿@page
+@model rallygame.Web.Pages.Admin.CodigosModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Códigos QR";
+}
+
+<div class="mb-8">
+    <h1 class="text-2xl font-bold text-gray-800">Códigos QR</h1>
+    <p class="text-gray-500">Códigos alternativos para cada pregunta</p>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+    <div class="flex items-center gap-4">
+        <div class="flex-1">
+            <p class="text-sm text-gray-500 mb-2">Instrucciones:</p>
+            <ol class="list-decimal list-inside text-gray-600 space-y-1 text-sm">
+                <li>Imprime cada código QR</li>
+                <li>Pega los códigos en las estaciones del rally</li>
+                <li>Los participantes escanean para obtener la pregunta</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    @for (int i = 0; i < Model.Preguntas.Count; i++)
+    {
+        var p = Model.Preguntas[i];
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
+            <div class="mb-4">
+                @if (!string.IsNullOrEmpty(p.CodigoAlt))
+                {
+                    <img src="/api/qr/@p.CodigoAlt" 
+                         alt="QR @p.CodigoAlt" 
+                         class="mx-auto rounded-lg border"
+                         onerror="this.onerror=null;this.src='/api/qr/'+encodeURIComponent('@p.CodigoAlt')">
+                }
+                else
+                {
+                    <div class="mx-auto w-[200px] h-[200px] bg-gray-100 rounded-lg flex items-center justify-center">
+                        <span class="text-gray-400 text-sm">Sin código</span>
+                    </div>
+                }
+            </div>
+            <h3 class="font-semibold text-gray-800 mb-1">@($"Pregunta {i + 1}")</h3>
+            <p class="text-sm text-gray-500 mb-2">@(p.CodigoAlt ?? "Sin código")</p>
+            @if (!string.IsNullOrEmpty(p.CodigoAlt))
+            {
+                <button onclick="copiarCodigo('@p.CodigoAlt')" 
+                        class="text-blue-600 hover:text-blue-700 text-sm">
+                    <i class="fas fa-copy mr-1"></i>Copiar código
+                </button>
+            }
+        </div>
+    }
+    
+    @if (!Model.Preguntas.Any())
+    {
+        <div class="col-span-full bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+            <i class="fas fa-qrcode text-4xl mb-4 text-gray-300"></i>
+            <p class="text-gray-500">No hay preguntas para generar códigos</p>
+        </div>
+    }
+</div>
+
+<script>
+    function copiarCodigo(codigo) {
+        navigator.clipboard.writeText(codigo).then(() => {
+            alert('Código copiado al portapapeles');
+        }).catch(err => {
+            console.error('Error al copiar:', err);
+        });
+    }
+</script>

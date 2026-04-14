@@ -1,0 +1,31 @@
+# .NET
+
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.log
+.vs/
+*.userosscache
+*.sln.docstates
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Dependencies
+node_modules/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Database
+*.db
+*.sqlite
+
+# Local config
+appsettings.json
+!appsettings.json.example
