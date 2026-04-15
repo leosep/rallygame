@@ -11,10 +11,30 @@
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 min-h-screen">
+<body class="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 min-h-screen" oncontextmenu="return false" onselectstart="return false" ondragstart="return false" oncopy="return false" oncut="return false">
     <div class="min-h-screen p-4 md:p-8">
         @RenderBody()
     </div>
+    
+    <!-- Anti-cheat overlay -->
+    <div id="cheat-overlay" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[9999] hidden">
+        <div class="text-center text-white p-8">
+            <i class="fas fa-exclamation-triangle text-5xl text-yellow-500 mb-4"></i>
+            <h2 class="text-2xl font-bold mb-2">¡Espera!</h2>
+            <p class="text-gray-300">No puedes salir de la página mientrasrespondes una pregunta.</p>
+            <button onclick="document.getElementById('cheat-overlay').classList.add('hidden')" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg">
+                Volver al juego
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && document.getElementById('app').__vue_app__.$data.currentStep === 'question') {
+                document.getElementById('cheat-overlay').classList.remove('hidden');
+            }
+        });
+    </script>
     
     <!-- Mobile bottom nav -->
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50">

@@ -109,6 +109,18 @@
             </div>
 
             <h2 class="text-xl font-bold text-gray-800 mb-6">{{ pregunta?.pregunta1 }}</h2>
+            
+            <div class="mb-4">
+                <div class="flex justify-between text-sm text-gray-500 mb-1">
+                    <span>Tiempo restante</span>
+                    <span :class="{'text-red-500': tiempoRestante <= 10, 'text-yellow-500': tiempoRestante > 10 && tiempoRestante <= 20, 'text-green-500': tiempoRestante > 20}">{{ tiempoRestante }}s</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="h-2 rounded-full transition-all duration-1000" 
+                         :class="{'bg-red-500': tiempoRestante <= 10, 'bg-yellow-500': tiempoRestante > 10 && tiempoRestante <= 20, 'bg-green-500': tiempoRestante > 20}"
+                         :style="{width: (tiempoRestante / 30 * 100) + '%'}"></div>
+                </div>
+            </div>
 
             <div class="space-y-3">
                 <label v-for="opcion in pregunta?.opcions" :key="opcion.id" 
@@ -192,6 +204,8 @@
             const verificando = ref(false);
             const respuestaCorrecta = ref('');
             const scannerActive = ref(false);
+            const tiempoRestante = ref(30);
+            let temporizador = null;
             let html5QrCode = null;
 
             const logout = () => {
@@ -201,6 +215,20 @@
                 nombre.value = '';
                 currentStep.value = 'register';
                 stopScanner();
+                clearInterval(temporizador);
+            };
+
+            const iniciarTemporizador = () => {
+                clearInterval(temporizador);
+                tiempoRestante.value = 30;
+                temporizador = setInterval(() => {
+                    tiempoRestante.value--;
+                    if (tiempoRestante.value <= 0) {
+                        clearInterval(temporizador);
+                        alert('¡Tiempo agotado! Intenta con otra pregunta.');
+                        currentStep.value = 'scanner';
+                    }
+                }, 1000);
             };
 
             const startScanner = async () => {
@@ -305,6 +333,8 @@
                         pregunta.value = data;
                         currentStep.value = 'question';
                         selectedOpcion.value = null;
+                        tiempoRestante.value = 30;
+                        iniciarTemporizador();
                     } else {
                         alert('Código no válido');
                     }
@@ -391,7 +421,7 @@ if (response.ok) {
 return {
                 currentStep, nombre, token, identificacion, codigoManual, pregunta, selectedOpcion,
                 loading, sending, verificando, logout, registrar, buscarPreguntaManual, enviarRespuesta, volver,
-                scannerActive, startScanner, stopScanner
+                scannerActive, startScanner, stopScanner, tiempoRestante
             };
         }
     }).mount('#app');
