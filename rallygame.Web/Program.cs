@@ -13,7 +13,7 @@ builder.Services.AddSession(options =>
 });
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Server=10.0.0.204;Database=rallygame;User Id=sa;Password=Symetri123@;TrustServerCertificate=True";
+    ?? "Server=localhost;Database=rallygame;User Id=sa;Password=YOUR_PASSWORD;TrustServerCertificate=True";
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
