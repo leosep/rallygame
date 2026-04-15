@@ -242,11 +242,14 @@
                             buscarPregunta(decodedText);
                             stopScanner();
                         },
-                        (errorMessage) => {}
+                        (errorMessage) => {
+                            // Ignore scan errors
+                        }
                     );
                     scannerActive.value = true;
                 } catch (e) {
-                    alert('Error al iniciar cámara: ' + e.message);
+                    console.error('Camera error:', e);
+                    // Silent fail - user can use manual input
                 }
             };
 
@@ -400,6 +403,7 @@ if (response.ok) {
                              const data = await response.json();
                              nombre.value = data.nombres || localStorage.getItem('indoNombres') || '';
                              currentStep.value = 'scanner';
+                             setTimeout(() => startScanner(), 500);
                          } else {
                             localStorage.removeItem('indoToken');
                             localStorage.removeItem('indoNombres');
