@@ -50,7 +50,7 @@ namespace rallygame.Web.Services
                 _context.AdminUsers.Add(adminUser2);
                 await _context.SaveChangesAsync();
             }
-            else if (existingUser != null && !existingUser.Activo)
+            else if (!existingUser.Activo)
             {
                 existingUser.Activo = true;
                 await _context.SaveChangesAsync();
